@@ -5,7 +5,7 @@ from datetime import datetime
 environ['NO_PROXY'] = '*'
 
 # ====================== 配置区（只改这两个）======================
-WEWORK_WEBHOOK = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=你的key"
+WEWORK_WEBHOOK = "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1e7a494e-2dc8-43f8-a917-ba123adb424d"
 CITY_CODE = "101010100"  # 北京，换成你城市代码
 # =================================================================
 
