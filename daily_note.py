@@ -10,7 +10,7 @@ CONFIG = {
         ("武平", "101230704"),
         ("龙泉", "101210803")
     ],
-    "API_BASE": "https://60s.gsyy.eu.org",
+    "API_BASE": "https://60s.viki.moe",
     "TIMEOUT": 10
 }
 
