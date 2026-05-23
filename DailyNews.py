@@ -6,7 +6,7 @@ warnings.filterwarnings("ignore")
 
 # ==================== 【中心化配置】 ====================
 CONFIG = {
-    "WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=f1d36ecd-288b-4531-a7fd-47da8db862ec",
+    "WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1e7a494e-2dc8-43f8-a917-ba123adb424d",
     "API_BASE": "https://60s.gsyy.help",
     "TIMEOUT": 15
 }
