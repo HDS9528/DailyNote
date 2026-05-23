@@ -5,7 +5,7 @@ import json
 
 # ==================== 【中心化配置模块】 ====================
 CONFIG = {
-    "WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=f1d36ecd-288b-4531-a7fd-47da8db862ec",
+    "WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1e7a494e-2dc8-43f8-a917-ba123adb424d",
     "CITY_LIST": [
         ("武平", "101230704"),
         ("龙泉", "101210803")
