@@ -1,0 +1,16 @@
+name: 每日早报推送
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 23 * * *" # 每天早上7点
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: 安装依赖
+        run: pip install requests
+      - name: 运行脚本
+        run: python daily_note.py
