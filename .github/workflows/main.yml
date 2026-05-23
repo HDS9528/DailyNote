@@ -1,0 +1,18 @@
+name: 每日早报推送
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 23 * * *"  # 每天早上7点推送
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 推送天气+新闻
+        uses: joyce7299/daily-push@main
+        env:
+          # 企业微信机器人（你已经有了）
+          WEWORK_WEBHOOK_URL: ${{ secrets.WEWORK_WEBHOOK_URL }}
+          # 城市（可改：北京、上海、广州、深圳）
+          CITY: "北京"
