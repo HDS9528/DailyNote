@@ -3,8 +3,8 @@ name: 每日早报推送
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 22 * * *"  # 北京时间 06:00（提前2小时）
-    - cron: "30 22 * * *" # 北京时间 06:30（提前2小时）
+    - cron: "30 22 * * *"  # 北京时间 06:00（提前2小时）
+   # - cron: "30 22 * * *" # 北京时间 06:30（提前2小时）
 
 jobs:
   run_daily_note:
@@ -17,12 +17,11 @@ jobs:
       - name: 执行 daily_note.py
         run: python daily_note.py
 
-  run_daily_news:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 22 * * *'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: 安装依赖
-        run: pip install requests
-      - name: 执行 DailyNews.py
-        run: python DailyNews.py
+ # run_daily_news:
+ #   if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 22 * * *'
+ #   runs-on: ubuntu-latest
+ #   steps:#      - uses: actions/checkout@v4
+#      - name: 安装依赖
+#       run: pip install requests
+#      - name: 执行 DailyNews.py
+#        run: python DailyNews.py
