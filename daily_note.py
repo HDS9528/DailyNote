@@ -2,6 +2,7 @@
 import requests
 from datetime import datetime
 import json
+import time
 
 # ==================== 【中心化配置模块】 ====================
 CONFIG = {
@@ -20,26 +21,31 @@ API = {
     "moyu": f"{CONFIG['API_BASE']}/v2/moyu?encoding=text"
 }
 
-# ==================== 【天气获取模块】 ====================
+# ==================== 【天气获取模块 - 修复版：实时当日数据】 ====================
 def get_current_weather(city_name, city_code):
     try:
-        url = f"http://d1.weather.com.cn/dingzhi/{city_code}.html"
+        # 替换为实时实况+当日预报接口 sk_2d
+        url = f"http://d1.weather.com.cn/sk_2d/{city_code}.html?_={int(time.time()*1000)}"
         headers = {
-            "User-Agent": "Mozilla/5.0",
-            "Referer": "http://www.weather.com.cn/"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "http://www.weather.com.cn/",
+            "Cache-Control": "no-cache"
         }
         res = requests.get(url, headers=headers, timeout=CONFIG["TIMEOUT"])
         res.encoding = "utf-8"
-        data = res.text.split(f"var cityDZ{city_code} =")[1].split(";var alarmDZ")[0]
-        weather = json.loads(data)["weatherinfo"]
+        # 提取 dataSK 实时天气JSON
+        data = res.text.split(f"var dataSK =")[1].split(";")[0]
+        weather = json.loads(data)
         return (
             f"【{city_name}】\n"
-            f"温度：{weather['temp']}\n"
-            f"最低：{weather['tempn']}\n"
-            f"天气：{weather['weather']}\n"
-            f"风力：{weather['wd']}{weather['ws']}"
+            f"实时温度：{weather['temp']}℃\n"
+            f"今日最低：{weather['tempn']}℃\n"
+            f"天气状况：{weather['weather']}\n"
+            f"风向风力：{weather['WD']}{weather['WS']}\n"
+            f"更新时间：{weather['time']}"
         )
-    except:
+    except Exception as e:
+        print(f"{city_name}天气获取异常：{str(e)}")
         return f"【{city_name}】天气获取失败"
 
 # ==================== 【各类信息获取模块】 ====================
@@ -92,8 +98,11 @@ def send_message(content):
         "msgtype": "text",
         "text": {"content": content}
     }
-    requests.post(CONFIG["WEBHOOK_URL"], json=payload)
-    print("✅ 推送成功")
+    resp = requests.post(CONFIG["WEBHOOK_URL"], json=payload)
+    if resp.status_code == 200:
+        print("✅ 推送成功")
+    else:
+        print(f"❌ 推送失败，状态码：{resp.status_code}，返回：{resp.text}")
 
 # ==================== 【主入口】 ====================
 if __name__ == "__main__":
