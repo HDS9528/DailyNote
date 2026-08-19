@@ -1,21 +1,27 @@
 name: 每日早报推送
-
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 22 * * *"  # 北京时间 06:00（提前2小时）
-   # - cron: "30 22 * * *" # 北京时间 06:30（提前2小时）
-
+    - cron: "0 23 * * *"  # UTC23:00 → 北京时间 07:00
 jobs:
   run_daily_note:
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 22 * * *'
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 23 * * *'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: 缓存油价文件
+        uses: actions/cache@v4
+        with:
+          path: oil_cache.txt
+          key: oil-cache-v1
+
       - name: 安装依赖
         run: pip install requests
+
       - name: 执行 daily_note.py
         run: python daily_note.py
+        
 
  # run_daily_news:
  #   if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 22 * * *'
