@@ -11,7 +11,7 @@ CONFIG = {
         ("武平", "武平"),
         ("宁波-镇海", "镇海")
     ],
-    "API_BASE": "https://60s.viki.moe",
+    "API_BASE": "https://60s.gsyy.help",
     "TIMEOUT": 10
 }
 
