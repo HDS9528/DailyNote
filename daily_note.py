@@ -1,8 +1,10 @@
 # -*- coding: utf8 -*-
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
-#https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1e7a494e-2dc8-43f8-a917-ba123adb424d
+import os
+import time
+
 # ==================== 【中心化配置模块】 ====================
 CONFIG = {
     "WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=33a8f34a-6abe-434a-81ef-bb9a252cc3f1",
@@ -12,29 +14,36 @@ CONFIG = {
         ("宁波-镇海", "镇海")
     ],
     "API_BASE": "https://60s.gsyy.help",
-    "TIMEOUT": 10
+    "TIMEOUT": 10,
+    "REQ_DELAY": 0.4,
+    "OIL_UPDATE_HOUR": 6,    # >=8点才拉取新油价
+    "OIL_CACHE_FILE": "oil_cache.txt"
 }
 
-API = {
-    "fuel": f"{CONFIG['API_BASE']}/v2/fuel-price?region=浙江&encoding=text",
-    "moyu": f"{CONFIG['API_BASE']}/v2/moyu?encoding=text",
-    "weather_realtime": f"{CONFIG['API_BASE']}/v2/weather/realtime"
+HEADERS = {
+    "User‑Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
 }
 
-# ==================== 【天气获取模块（60s.viki.moe）】 ====================
+# ==================== 【天气获取模块】 ====================
 def get_current_weather(city_show_name, query_city):
     try:
         params = {"query": query_city}
-        res = requests.get(API["weather_realtime"], params=params, timeout=CONFIG["TIMEOUT"])
+        res = requests.get(f"{CONFIG['API_BASE']}/v2/weather/realtime", params=params, headers=HEADERS, timeout=CONFIG["TIMEOUT"])
+        time.sleep(CONFIG["REQ_DELAY"])
         res.encoding = "utf-8"
-        resp_json = res.json()
+
+        try:
+            resp_json = res.json()
+        except json.JSONDecodeError:
+            print(f"[天气] {city_show_name} 返回非JSON响应")
+            return f"【{city_show_name}】天气接口返回异常"
+
         if resp_json.get("code") != 200:
             return f"【{city_show_name}】天气接口返回异常"
 
         data = resp_json["data"]
         weather = data["weather"]
         air = data["air_quality"]
-
         warn_text = ""
         alerts = data.get("alerts", [])
         if alerts:
@@ -49,25 +58,52 @@ def get_current_weather(city_show_name, query_city):
         )
         output += warn_text
         return output
-
     except Exception as e:
         print(f"[天气异常] {city_show_name} : {str(e)}")
         return f"【{city_show_name}】天气获取失败"
 
 # ==================== 【各类信息获取模块】 ====================
 def get_fuel_price():
-    try:
-        res = requests.get(API["fuel"], timeout=CONFIG["TIMEOUT"])
-        res.encoding = "utf-8"
-        return res.text.strip()
-    except Exception as e:
-        print(f"[油价异常] {str(e)}")
-        return "油价信息获取失败"
+    """
+    >=8点：请求新油价，成功写入缓存
+    <8点：读取缓存昨日油价，附带文字提示
+    """
+    now = datetime.now()
+    hour = now.hour
+    cache_path = CONFIG["OIL_CACHE_FILE"]
+
+    if hour >= CONFIG["OIL_UPDATE_HOUR"]:
+        try:
+            url = f"{CONFIG['API_BASE']}/v2/fuel-price?region=浙江&encoding=text"
+            res = requests.get(url, headers=HEADERS, timeout=CONFIG["TIMEOUT"])
+            time.sleep(CONFIG["REQ_DELAY"])
+            res.encoding = "utf-8"
+            oil_text = res.text.strip()
+            if oil_text:
+                # 更新缓存
+                with open(cache_path, "w", encoding="utf‑8") as f:
+                    f.write(oil_text)
+            return oil_text
+        except Exception as e:
+            print(f"[油价异常] {str(e)}")
+            return "油价信息获取失败"
+    else:
+        # 小于8点，读取缓存
+        if os.path.exists(cache_path):
+            with open(cache_path, "r", encoding="utf‑8") as f:
+                cache_text = f.read().strip()
+            return f"{cache_text}\n⚠️以下为昨日油价，8点后更新今日数据"
+        else:
+            return "暂无油价缓存，请8点后执行获取最新油价"
 
 
 def get_moyu():
+    """摸鱼日报强制传入本地北京时间日期，不受服务端时区影响"""
     try:
-        res = requests.get(API["moyu"], timeout=CONFIG["TIMEOUT"])
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        url = f"{CONFIG['API_BASE']}/v2/moyu?encoding=text&date={today_str}"
+        res = requests.get(url, headers=HEADERS, timeout=CONFIG["TIMEOUT"])
+        time.sleep(CONFIG["REQ_DELAY"])
         res.encoding = "utf-8"
         return res.text.strip()
     except Exception as e:
