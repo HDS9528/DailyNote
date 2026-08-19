@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 import requests
 from datetime import datetime
+from zoneinfo import ZoneInfo
 import json
 import os
 import time
@@ -16,12 +17,16 @@ CONFIG = {
     "API_BASE": "https://60s.gsyy.help",
     "TIMEOUT": 10,
     "REQ_DELAY": 0.4,
-    "OIL_UPDATE_HOUR": 6,
+    "OIL_UPDATE_HOUR": 6,   # 北京时间 >=6点拉取新油价
     "OIL_CACHE_FILE": "oil_cache.txt"
 }
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
 }
+
+def get_beijing_now():
+    """获取北京时间datetime对象"""
+    return datetime.now(ZoneInfo("Asia/Shanghai"))
 
 # ==================== 【天气获取模块】 ====================
 def get_current_weather(city_show_name, query_city):
@@ -63,7 +68,7 @@ def get_fuel_price():
     >=OIL_UPDATE_HOUR：请求新油价，成功写入缓存
     <OIL_UPDATE_HOUR：读取缓存昨日油价，附带文字提示
     """
-    now = datetime.now()
+    now = get_beijing_now()
     hour = now.hour
     cache_path = CONFIG["OIL_CACHE_FILE"]
     if hour >= CONFIG["OIL_UPDATE_HOUR"]:
@@ -74,7 +79,6 @@ def get_fuel_price():
             res.encoding = "utf-8"
             oil_text = res.text.strip()
             if oil_text:
-                # 更新缓存
                 with open(cache_path, "w", encoding="utf-8") as f:
                     f.write(oil_text)
             return oil_text
@@ -82,7 +86,6 @@ def get_fuel_price():
             print(f"[油价异常] {str(e)}")
             return "油价信息获取失败"
     else:
-        # 小于设定小时，读取缓存
         if os.path.exists(cache_path):
             with open(cache_path, "r", encoding="utf-8") as f:
                 cache_text = f.read().strip()
@@ -91,9 +94,9 @@ def get_fuel_price():
             return "暂无油价缓存，请6点后执行获取最新油价"
 
 def get_moyu():
-    """摸鱼日报强制传入本地北京时间日期，不受服务端时区影响"""
+    """摸鱼日报强制传入北京时间日期"""
     try:
-        today_str = datetime.now().strftime("%Y-%m-%d")
+        today_str = get_beijing_now().strftime("%Y-%m-%d")
         url = f"{CONFIG['API_BASE']}/v2/moyu?encoding=text&date={today_str}"
         res = requests.get(url, headers=HEADERS, timeout=CONFIG["TIMEOUT"])
         time.sleep(CONFIG["REQ_DELAY"])
@@ -105,7 +108,7 @@ def get_moyu():
 
 # ==================== 【消息组装模块】 ====================
 def build_message():
-    now = datetime.now()
+    now = get_beijing_now()
     week_arr = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
     date_str = now.strftime("%Y-%m-%d")
     week_str = week_arr[now.weekday()]
