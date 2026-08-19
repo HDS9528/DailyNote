@@ -8,7 +8,7 @@ import time
 
 # ==================== 【中心化配置模块】 ====================
 CONFIG = {
-    "WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=33a8f34a-6abe-434a-81ef-bb9a252cc3f1",
+    "WEBHOOK_URL": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1e7a494e-2dc8-43f8-a917-ba123adb424d",
     # (显示名称 , query查询城市名)
     "CITY_LIST": [
         ("武平", "武平"),
